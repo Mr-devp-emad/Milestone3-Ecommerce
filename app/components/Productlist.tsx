@@ -14,10 +14,16 @@ interface Product {
 
 const ProductList = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [cart, setCart] = useState<Product[]>(
-    () => JSON.parse(localStorage.getItem("cart") || "[]") || []
-  );
+  const [cart, setCart] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Load cart from localStorage only in the browser
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedCart = JSON.parse(localStorage.getItem("cart") || "[]") || [];
+      setCart(storedCart);
+    }
+  }, []);
 
   // Fetch products from API
   useEffect(() => {
@@ -37,7 +43,7 @@ const ProductList = () => {
     fetchProducts();
   }, []);
 
-  // Function to add a product to cart with quantity tracking
+  // Function to add a product to cart
   const addToCart = (product: Product) => {
     setCart((prevCart) => {
       const existingProduct = prevCart.find((item) => item.id === product.id);
@@ -53,7 +59,11 @@ const ProductList = () => {
         updatedCart = [...prevCart, { ...product, quantity: 1 }];
       }
 
-      localStorage.setItem("cart", JSON.stringify(updatedCart));
+      // Update localStorage in the browser
+      if (typeof window !== "undefined") {
+        localStorage.setItem("cart", JSON.stringify(updatedCart));
+      }
+
       return updatedCart;
     });
 
